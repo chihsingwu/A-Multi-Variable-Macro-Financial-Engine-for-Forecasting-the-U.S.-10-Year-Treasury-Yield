@@ -1,0 +1,56 @@
+def predict_10y_ytm_macro(
+    bid_coverage_ratio,
+    jpy_change_3m,
+    us_debt_growth_3m,
+    dxy_index,
+    yield_curve_gap,
+    inflation,
+    fed_rate,
+    base_weight=0.5
+):
+    """
+    Predict future U.S. 10-Year Treasury Yield using macro-financial variables.
+
+    Parameters:
+    - bid_coverage_ratio (float): Auction bid-to-cover ratio (e.g. 2.4)
+    - jpy_change_3m (float): JPY appreciation vs USD over 3 months (%) (e.g. 1.8)
+    - us_debt_growth_3m (float): US federal debt growth over 3 months (%) (e.g. 2.5)
+    - dxy_index (float): USD Dollar Index (e.g. 105.2)
+    - yield_curve_gap (float): 10Y - 1Y yield gap (%) (e.g. -0.9)
+    - inflation (float): Expected inflation rate (%) (e.g. 2.5)
+    - fed_rate (float): Fed Funds Rate (%) (e.g. 5.25)
+    - base_weight (float): Weight on base macro prediction vs signal-corrected (default 0.5)
+
+    Returns:
+    - projected_ytm (float): Predicted 10-Year Yield (%)
+    """
+
+    # Macro base prediction: inflation + weighted fed policy
+    macro_base = inflation + fed_rate * 0.5
+
+    # Correction term from market signals
+    correction = (
+        -0.05 * bid_coverage_ratio +
+        0.03 * jpy_change_3m +
+        0.04 * us_debt_growth_3m +
+        0.01 * (dxy_index - 100) +
+        -0.06 * yield_curve_gap
+    )
+
+    # Final smoothed projection
+    projected_ytm = macro_base * base_weight + (macro_base + correction) * (1 - base_weight)
+    return round(projected_ytm, 3)
+
+
+# Example usage
+if __name__ == "__main__":
+    result = predict_10y_ytm_macro(
+        bid_coverage_ratio=2.4,
+        jpy_change_3m=1.8,
+        us_debt_growth_3m=2.5,
+        dxy_index=105.2,
+        yield_curve_gap=-0.9,
+        inflation=2.5,
+        fed_rate=5.25
+    )
+    print(f"Predicted 10Y Yield: {result}%")
